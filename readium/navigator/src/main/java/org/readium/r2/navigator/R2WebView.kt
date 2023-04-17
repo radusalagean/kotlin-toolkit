@@ -39,6 +39,10 @@ class R2WebView(context: Context, attrs: AttributeSet) : R2BasicWebView(context,
 
     private val uiScope = CoroutineScope(Dispatchers.Main)
 
+    fun publicComputeHorizontalScrollRange(): Int {
+        return computeHorizontalScrollRange()
+    }
+
     @android.webkit.JavascriptInterface
     override fun scrollRight(animated: Boolean) {
         super.scrollRight(animated)

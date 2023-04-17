@@ -27,6 +27,8 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.webkit.WebViewClientCompat
+import androidx.webkit.WebViewCompat
+import java.util.*
 import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -43,6 +45,7 @@ import org.readium.r2.shared.SCROLL_REF
 import org.readium.r2.shared.publication.Link
 import org.readium.r2.shared.publication.Locator
 import org.readium.r2.shared.publication.ReadingProgression
+import timber.log.Timber
 
 class R2EpubPageFragment : Fragment() {
 
@@ -215,8 +218,26 @@ class R2EpubPageFragment : Fragment() {
 
                 // To make sure the page is properly laid out before jumping to the target locator,
                 // we execute a dummy JavaScript and wait for the callback result.
+
+                // Note: To me, this seems to be the root cause, the callback from
+                //  "webView.evaluateJavascript("true")" is called before the page is fully loaded.
+                // Old solution:
                 webView.evaluateJavascript("true") {
+                    Timber.tag("rs-tag").d("callback from: webView.evaluateJavascript(\"true\") (horizontal scroll range: ${webView.publicComputeHorizontalScrollRange()} | current numPages = ${webView.numPages})")
                     onLoadPage()
+                }
+
+                // Note: This seems to work without issues on my Foldable Emulator,
+                //  but I'm not sure if this is a proper solution.
+                //  Based on my research, this approach could have unexpected behavior on
+                //  some devices.
+                val generatedRequestId = Random().nextLong()
+                WebViewCompat.postVisualStateCallback(webView, generatedRequestId) {
+                    if (it != generatedRequestId) {
+                        return@postVisualStateCallback
+                    }
+                    Timber.tag("rs-tag").d("callback from postVisualStateCallback: (horizontal scroll range: ${webView.publicComputeHorizontalScrollRange()} | current numPages = ${webView.numPages})")
+//                    onLoadPage()
                 }
             }
 
@@ -403,6 +424,11 @@ class R2EpubPageFragment : Fragment() {
         } else {
             // Figure out the target web view "page" from the requested
             // progression.
+
+            // Note: webView.numPages is read here, a value which relies on webView.computeHorizontalScrollRange
+            //  Because webView.computeHorizontalScrollRange is read before the content is fully loaded,
+            //  numPages will have a lower value than expected, and the `item` will have an unexpected
+            //  value as well because of that:
             var item = (progression * webView.numPages).roundToInt()
             if (readingProgression == ReadingProgression.RTL && item > 0) {
                 item -= 1

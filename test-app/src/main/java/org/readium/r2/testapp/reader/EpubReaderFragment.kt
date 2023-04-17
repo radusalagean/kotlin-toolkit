@@ -33,6 +33,8 @@ import org.readium.r2.testapp.LITERATA
 import org.readium.r2.testapp.R
 import org.readium.r2.testapp.reader.preferences.UserPreferencesViewModel
 import org.readium.r2.testapp.search.SearchFragment
+import org.readium.r2.testapp.utils.observeWhenStarted
+import timber.log.Timber
 
 @OptIn(ExperimentalReadiumApi::class, ExperimentalDecorator::class)
 class EpubReaderFragment : VisualReaderFragment(), EpubNavigatorFragment.Listener {
@@ -121,6 +123,9 @@ class EpubReaderFragment : VisualReaderFragment(), EpubNavigatorFragment.Listene
             }
         }
         navigator = childFragmentManager.findFragmentByTag(navigatorFragmentTag) as EpubNavigatorFragment
+        navigator.currentLocator.observeWhenStarted(viewLifecycleOwner) {
+            Timber.tag("rs-tag").w("position changed: ${it.locations.position}")
+        }
 
         return view
     }
