@@ -38,12 +38,11 @@ import org.readium.r2.testapp.outline.OutlineFragment
  */
 open class ReaderActivity : AppCompatActivity() {
 
-    private val model: ReaderViewModel by viewModels()
-
-    override fun getDefaultViewModelProviderFactory(): ViewModelProvider.Factory {
+    private val viewModelFactory by lazy {
         val arguments = ReaderActivityContract.parseIntent(this)
-        return ReaderViewModel.createFactory(application as Application, arguments)
+        ReaderViewModel.createFactory(application as Application, arguments)
     }
+    private val model: ReaderViewModel by viewModels { viewModelFactory }
 
     private lateinit var binding: ActivityReaderBinding
     private lateinit var readerFragment: BaseReaderFragment

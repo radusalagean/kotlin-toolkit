@@ -49,7 +49,11 @@ class EpubReaderFragment : VisualReaderFragment(), EpubNavigatorFragment.Listene
             isSearchViewIconified = savedInstanceState.getBoolean(IS_SEARCH_VIEW_ICONIFIED)
         }
 
-        val readerData = model.readerInitData as EpubReaderInitData
+        // This is how my app handled it and worked before updating to androidx.fragment:fragment-ktx:1.6.0
+        val readerData = model.readerInitData as? EpubReaderInitData ?: kotlin.run {
+            super.onCreate(null)
+            return
+        }
 
         childFragmentManager.fragmentFactory =
             readerData.navigatorFactory.createFragmentFactory(

@@ -51,7 +51,10 @@ abstract class LifecycleMediaSessionService : MediaSessionService(), LifecycleOw
         super.onDestroy()
     }
 
-    override fun getLifecycle(): Lifecycle {
-        return lifecycleDispatcher.lifecycle
-    }
+//    override fun getLifecycle(): Lifecycle {
+//        return lifecycleDispatcher.lifecycle
+//    }
+
+    override val lifecycle: Lifecycle
+        get() = lifecycleDispatcher.lifecycle
 }
